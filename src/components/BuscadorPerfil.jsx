@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CampoNumero, limitar } from "./CampoNumero";
+import { VistaPreviaPeticion } from "./VistaPreviaPeticion";
 
 // Mismos límites y valores por defecto que la API (GET /api/perfil).
 const VIDEOS = { minimo: 1, maximo: 30, porDefecto: 10 };
@@ -44,6 +45,16 @@ export function BuscadorPerfil({ onBuscar, cargando }) {
     });
   }
 
+  // Lo mismo que enviará crearExtraccionPerfil (api/tiktok.js), para la vista previa.
+  const cuerpo = {
+    tipo: "perfil",
+    usuario: usuario.trim(),
+    max_videos: limitar(maxVideos, VIDEOS),
+    comentarios,
+    max_comentarios: comentarios ? limitar(maxComentarios, COMENTARIOS) : undefined,
+    refrescar,
+  };
+
   return (
     <form onSubmit={manejarEnvio} className="space-y-3">
       <label htmlFor="usuario" className="sr-only">
@@ -51,7 +62,7 @@ export function BuscadorPerfil({ onBuscar, cargando }) {
       </label>
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center font-mono text-cyan-300">
             @
           </span>
           <input
@@ -64,15 +75,15 @@ export function BuscadorPerfil({ onBuscar, cargando }) {
             autoCapitalize="none"
             spellCheck="false"
             disabled={cargando}
-            className="w-full rounded-xl border border-slate-300 bg-white py-3 pr-3 pl-8 text-base text-slate-900 outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 disabled:bg-slate-100"
+            className="campo !pl-8 font-mono"
           />
         </div>
         <button
           type="submit"
           disabled={cargando || vacio}
-          className="rounded-xl bg-pink-600 px-5 py-3 font-semibold text-white transition hover:bg-pink-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="boton-neon"
         >
-          {cargando ? "Buscando…" : "Buscar"}
+          {cargando ? "Extrayendo…" : "Extraer"}
         </button>
       </div>
 
@@ -95,14 +106,14 @@ export function BuscadorPerfil({ onBuscar, cargando }) {
         />
       </div>
 
-      <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
+      <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-400">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={comentarios}
             onChange={(e) => setComentarios(e.target.checked)}
             disabled={cargando}
-            className="size-4 accent-pink-600"
+            className="size-4 accent-pink-500"
           />
           Incluir comentarios
         </label>
@@ -112,11 +123,13 @@ export function BuscadorPerfil({ onBuscar, cargando }) {
             checked={refrescar}
             onChange={(e) => setRefrescar(e.target.checked)}
             disabled={cargando}
-            className="size-4 accent-pink-600"
+            className="size-4 accent-pink-500"
           />
           Ignorar caché
         </label>
       </div>
+
+      <VistaPreviaPeticion metodo="POST" ruta="/api/extracciones" cuerpo={cuerpo} />
     </form>
   );
 }

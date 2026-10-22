@@ -1,11 +1,15 @@
+# Dependencias y compilados
 node_modules
 dist
+coverage
 *.log
 
-# Variables de entorno
+# Variables de entorno (solo se sube .env.example)
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
 
 # Editor
 .vscode/*

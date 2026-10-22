@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CampoNumero, limitar } from "./CampoNumero";
+import { VistaPreviaPeticion } from "./VistaPreviaPeticion";
 
 // Mismos límites que valida la API (app/validations/busqueda.py).
 const MINIMO_CARACTERES = 2;
@@ -31,6 +32,9 @@ export function BuscadorTema({ onBuscar, cargando }) {
     onBuscar(tema, { maxResultados: cantidad, refrescar });
   }
 
+  // Lo mismo que enviará crearExtraccionBusqueda (api/tiktok.js), para la vista previa.
+  const cuerpo = { tipo: "busqueda", q: tema.trim(), max_resultados: limitar(maxResultados, RESULTADOS), refrescar };
+
   return (
     <form onSubmit={manejarEnvio} className="space-y-3">
       <label htmlFor="tema" className="sr-only">
@@ -46,12 +50,12 @@ export function BuscadorTema({ onBuscar, cargando }) {
           maxLength={60}
           autoComplete="off"
           disabled={cargando}
-          className="w-full flex-1 rounded-xl border border-slate-300 bg-white px-3 py-3 text-base text-slate-900 outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 disabled:bg-slate-100"
+          className="campo flex-1 font-mono"
         />
         <button
           type="submit"
           disabled={cargando || corto}
-          className="rounded-xl bg-pink-600 px-5 py-3 font-semibold text-white transition hover:bg-pink-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="boton-neon"
         >
           {cargando ? "Buscando…" : "Buscar"}
         </button>
@@ -68,16 +72,18 @@ export function BuscadorTema({ onBuscar, cargando }) {
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-slate-600">
+      <label className="flex items-center gap-2 text-sm text-slate-400">
         <input
           type="checkbox"
           checked={refrescar}
           onChange={(e) => setRefrescar(e.target.checked)}
           disabled={cargando}
-          className="size-4 accent-pink-600"
+          className="size-4 accent-pink-500"
         />
         Ignorar caché
       </label>
+
+      <VistaPreviaPeticion metodo="POST" ruta="/api/extracciones" cuerpo={cuerpo} />
     </form>
   );
 }

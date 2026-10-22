@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import {
   METRICAS,
   creadoresFrecuentes,
@@ -17,7 +17,18 @@ import {
   valorMetrica,
 } from "../utils";
 import { GraficoBarras } from "./GraficoBarras";
+import { NumeroAnimado } from "./NumeroAnimado";
 import { TablaVideos } from "./TablaVideos";
+
+// Gráficos con recharts, cargados aparte (lazy) para que la app abra rápido.
+// lazy() espera un export default, por eso se adapta cada export con nombre.
+const GraficoEvolucion = lazy(() => import("./graficos").then((m) => ({ default: m.GraficoEvolucion })));
+const GraficoDispersion = lazy(() => import("./graficos").then((m) => ({ default: m.GraficoDispersion })));
+
+// Lo que se ve mientras llega el código de recharts: un panel vacío del mismo alto.
+function PanelCargandoGrafico() {
+  return <div className="panel h-72 animate-pulse" aria-hidden="true" />;
+}
 
 // Cuántos videos muestra el ranking.
 const TOP = 10;
@@ -39,12 +50,14 @@ function etiquetaVideo(video) {
   return texto || `Video del ${formatearFecha(video.fecha)}`;
 }
 
-// Un indicador del encabezado del panel.
-function Indicador({ etiqueta, valor, detalle }) {
+// Un indicador del encabezado del panel. El número "cuenta" hasta su valor al aparecer.
+function Indicador({ etiqueta, numero, formato, detalle, destacado = false }) {
   return (
-    <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-      <p className="text-xs text-slate-500">{etiqueta}</p>
-      <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{valor}</p>
+    <div className={`panel p-3 ${destacado ? "border-pink-500/40 shadow-[0_0_20px_rgb(236_72_153/0.15)]" : ""}`}>
+      <p className="etiqueta-hud !text-[9px]">{etiqueta}</p>
+      <p className="mt-1 font-mono text-xl font-bold text-white">
+        <NumeroAnimado valor={numero} formato={formato} />
+      </p>
       {detalle && <p className="mt-0.5 text-[11px] text-slate-500">{detalle}</p>}
     </div>
   );
@@ -136,7 +149,7 @@ export function PanelEstadisticas({ videos, nombre, datosCompletos }) {
   }, [videos]);
 
   if (!calculos) {
-    return <p className="py-6 text-center text-slate-500">No hay videos para analizar.</p>;
+    return <p className="panel py-6 text-center text-slate-400">No hay videos para analizar.</p>;
   }
 
   const { resumen, dias, hashtags, filas, creadores, hallazgos } = calculos;
@@ -156,19 +169,22 @@ export function PanelEstadisticas({ videos, nombre, datosCompletos }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-lg font-semibold text-slate-900">Estadísticas</h3>
+        <div>
+          <p className="etiqueta-hud">// métricas calculadas en el navegador</p>
+          <h3 className="text-lg font-semibold text-white">Estadísticas</h3>
+        </div>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => descargarCSV(filas, archivo)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="boton-borde"
           >
             Exportar CSV
           </button>
           <button
             type="button"
             onClick={() => descargarJSON(datosCompletos, archivo)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="boton-borde"
           >
             Exportar JSON
           </button>
@@ -176,17 +192,20 @@ export function PanelEstadisticas({ videos, nombre, datosCompletos }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <Indicador etiqueta="Videos analizados" valor={resumen.cantidad} />
+        <Indicador etiqueta="Videos analizados" numero={resumen.cantidad} />
         <Indicador
           etiqueta="Tasa de interacción"
-          valor={formatearPorcentaje(resumen.tasaInteraccion)}
+          numero={resumen.tasaInteraccion}
+          formato={formatearPorcentaje}
           detalle="Interacciones / vistas"
+          destacado
         />
         {METRICAS.map(({ clave, etiqueta }) => (
           <Indicador
             key={clave}
             etiqueta={`${etiqueta} totales`}
-            valor={formatearNumero(resumen.totales[clave])}
+            numero={resumen.totales[clave]}
+            formato={formatearNumero}
             detalle={`Promedio ${formatearNumero(resumen.promedios[clave])} · Mediana ${formatearNumero(
               resumen.medianas[clave],
             )}`}
@@ -195,14 +214,30 @@ export function PanelEstadisticas({ videos, nombre, datosCompletos }) {
       </div>
 
       {hallazgos.length > 0 && (
-        <section className="rounded-2xl bg-slate-900 p-4 text-white shadow-sm">
-          <h4 className="font-semibold">Hallazgos</h4>
-          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-slate-200">
-            {hallazgos.map((h) => (
-              <li key={h}>{h}</li>
+        <section className="panel esquinas border-cyan-400/20 bg-cyan-950/20 p-4">
+          <p className="etiqueta-hud">// hallazgos automáticos</p>
+          <ul className="mt-2 space-y-2 text-sm text-slate-200">
+            {hallazgos.map((h, i) => (
+              // Cada hallazgo entra un poco después del anterior.
+              <li key={h} style={{ animationDelay: `${i * 120}ms` }} className="flex gap-2 motion-safe:animate-aparecer">
+                <span aria-hidden="true" className="font-mono text-cyan-300">&gt;</span>
+                {h}
+              </li>
             ))}
           </ul>
         </section>
+      )}
+
+      {/* Gráficos dinámicos (recharts): evolución en el tiempo y relación vistas–interacción. */}
+      {videos.length >= 2 && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Suspense fallback={<PanelCargandoGrafico />}>
+            <GraficoEvolucion videos={videos} />
+          </Suspense>
+          <Suspense fallback={<PanelCargandoGrafico />}>
+            <GraficoDispersion videos={videos} />
+          </Suspense>
+        </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -215,7 +250,7 @@ export function PanelEstadisticas({ videos, nombre, datosCompletos }) {
               value={metrica}
               onChange={(e) => setMetrica(e.target.value)}
               aria-label="Métrica del ranking"
-              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700"
+              className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 font-mono text-xs text-slate-200"
             >
               {OPCIONES_RANKING.map(({ clave, etiqueta }) => (
                 <option key={clave} value={clave}>

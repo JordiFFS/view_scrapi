@@ -1,6 +1,11 @@
+import { useEffect, useState } from "react";
+
 /**
  * Gráfico de barras horizontales hecho con divs (sin librerías de gráficos).
  * Cada barra es proporcional al valor más alto; el texto del valor va a la derecha.
+ *
+ * Es dinámico: al aparecer, las barras crecen desde 0 una tras otra, y cuando cambian los
+ * datos (por ejemplo, otra métrica en el selector) se estiran o encogen con una transición CSS.
  *
  * @param {object} props
  * @param {string} props.titulo
@@ -10,13 +15,20 @@
  */
 export function GraficoBarras({ titulo, descripcion, datos, acciones }) {
   const maximo = Math.max(...datos.map((d) => d.valor), 0);
+  // false en el primer render: las barras empiezan en 0 y en el siguiente cuadro crecen.
+  const [listo, setListo] = useState(false);
+
+  useEffect(() => {
+    const cuadro = requestAnimationFrame(() => setListo(true));
+    return () => cancelAnimationFrame(cuadro);
+  }, []);
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="panel min-w-0 p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h4 className="font-semibold text-slate-900">{titulo}</h4>
-          {descripcion && <p className="text-xs text-slate-500">{descripcion}</p>}
+          <h4 className="font-semibold text-white">{titulo}</h4>
+          {descripcion && <p className="text-xs text-slate-400">{descripcion}</p>}
         </div>
         {acciones}
       </div>
@@ -25,14 +37,16 @@ export function GraficoBarras({ titulo, descripcion, datos, acciones }) {
         <p className="py-4 text-center text-sm text-slate-500">Sin datos suficientes.</p>
       ) : (
         <ul className="space-y-2.5">
-          {datos.map((d) => {
+          {datos.map((d, i) => {
             const etiqueta = d.url ? (
-              <a href={d.url} target="_blank" rel="noreferrer" className="hover:underline">
+              <a href={d.url} target="_blank" rel="noreferrer" className="hover:text-cyan-300 hover:underline">
                 {d.etiqueta}
               </a>
             ) : (
               d.etiqueta
             );
+            // Un mínimo visible para que los valores pequeños no desaparezcan.
+            const ancho = maximo > 0 ? Math.max((d.valor / maximo) * 100, 1.5) : 0;
             return (
               <li
                 key={d.id}
@@ -40,14 +54,14 @@ export function GraficoBarras({ titulo, descripcion, datos, acciones }) {
                 className="group"
               >
                 <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
-                  <span className="min-w-0 truncate text-slate-700">{etiqueta}</span>
-                  <span className="shrink-0 font-semibold text-slate-900">{d.texto}</span>
+                  <span className="min-w-0 truncate text-slate-300">{etiqueta}</span>
+                  <span className="shrink-0 font-mono font-semibold text-white">{d.texto}</span>
                 </div>
-                <div className="h-2.5 w-full rounded-full bg-slate-100">
+                <div className="h-2 w-full rounded-full bg-white/5">
                   <div
-                    className="h-full rounded-full bg-pink-500 transition-colors group-hover:bg-pink-700"
-                    // Un mínimo visible para que los valores pequeños no desaparezcan.
-                    style={{ width: `${maximo > 0 ? Math.max((d.valor / maximo) * 100, 1.5) : 0}%` }}
+                    className="h-full rounded-full bg-gradient-to-r from-pink-600 to-pink-400 transition-[width,box-shadow] duration-700 ease-out group-hover:shadow-[0_0_12px_rgb(236_72_153/0.8)] motion-reduce:transition-none"
+                    // Cada barra arranca 50 ms después de la anterior: se ve una "ola".
+                    style={{ width: `${listo ? ancho : 0}%`, transitionDelay: listo ? `${i * 50}ms` : "0ms" }}
                   />
                 </div>
                 {d.detalle && <p className="mt-0.5 text-[11px] text-slate-500">{d.detalle}</p>}

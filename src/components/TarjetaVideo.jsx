@@ -13,8 +13,8 @@ const ESTADISTICAS = [
 // Un comentario dentro del desplegable.
 function Comentario({ comentario }) {
   return (
-    <li className="rounded-lg bg-slate-50 p-3 text-sm">
-      <p className="text-slate-800">{comentario.texto}</p>
+    <li className="rounded-lg border border-white/5 bg-black/30 p-3 text-sm">
+      <p className="text-slate-200">{comentario.texto}</p>
       <p className="mt-1 text-xs text-slate-500">
         {comentario.autor_anonimo || "Anónimo"} · {formatearFecha(comentario.fecha)} ·{" "}
         {formatearNumero(comentario.likes)} likes · {formatearNumero(comentario.respuestas)}{" "}
@@ -40,37 +40,42 @@ export function TarjetaVideo({ video, children }) {
   const estadisticas = video.estadisticas ?? {};
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-      <a href={video.url} target="_blank" rel="noreferrer" className="block bg-slate-900">
+    <article className="panel group/video overflow-hidden transition hover:-translate-y-0.5 hover:border-pink-500/40 hover:shadow-[0_0_24px_rgb(236_72_153/0.15)]">
+      <a href={video.url} target="_blank" rel="noreferrer" className="relative block bg-black">
         {video.portada ? (
           <img
             src={video.portada}
             alt={video.descripcion || "Portada del video"}
             loading="lazy"
             referrerPolicy="no-referrer"
-            className="aspect-[9/16] max-h-96 w-full object-cover sm:max-h-80"
+            className="aspect-[9/16] max-h-96 w-full object-cover opacity-90 transition group-hover/video:opacity-100 sm:max-h-80"
           />
         ) : (
-          <div className="flex aspect-[9/16] max-h-96 items-center justify-center text-slate-400 sm:max-h-80">
+          <div className="flex aspect-[9/16] max-h-96 items-center justify-center text-slate-500 sm:max-h-80">
             Sin portada
           </div>
         )}
+        {/* Línea de escaneo que recorre la portada al pasar el mouse. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-cyan-300 opacity-0 shadow-[0_0_12px_3px_rgb(34_211_238/0.6)] group-hover/video:opacity-100 motion-safe:group-hover/video:animate-escanear"
+        />
       </a>
 
       <div className="space-y-3 p-4">
         {children}
-        <p className="text-xs text-slate-500">{formatearFecha(video.fecha)}</p>
+        <p className="font-mono text-[11px] text-slate-500">{formatearFecha(video.fecha)}</p>
         {video.descripcion && (
-          <p className="line-clamp-3 text-sm text-slate-800">{video.descripcion}</p>
+          <p className="line-clamp-3 text-sm text-slate-200">{video.descripcion}</p>
         )}
 
-        <ul className="grid grid-cols-5 gap-1 text-center">
+        <ul className="grid grid-cols-5 gap-1 rounded-xl border border-white/5 bg-black/20 py-2 text-center">
           {ESTADISTICAS.map(({ clave, etiqueta, icono }) => (
             <li key={clave} title={etiqueta}>
               <span aria-hidden="true" className="block text-sm">
                 {icono}
               </span>
-              <span className="block text-xs font-semibold text-slate-900">
+              <span className="block font-mono text-xs font-semibold text-white">
                 {formatearNumero(estadisticas[clave])}
               </span>
               <span className="sr-only">{etiqueta}</span>
@@ -84,7 +89,7 @@ export function TarjetaVideo({ video, children }) {
               type="button"
               onClick={() => setAbierto((v) => !v)}
               aria-expanded={abierto}
-              className="w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="boton-borde w-full py-2"
             >
               {abierto ? "Ocultar" : "Ver"} comentarios ({comentarios.length})
             </button>

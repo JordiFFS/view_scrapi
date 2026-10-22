@@ -1,2 +1,168 @@
 /* Tailwind CSS v4: este import incluye todas las utilidades. No hace falta tailwind.config.js. */
 @import "tailwindcss";
+
+/*
+ * ===== Tema "consola de scraping" =====
+ * Fondo casi negro con una cuadrícula tenue, paneles de vidrio oscuro y acentos de neón:
+ *   rosa (#ec4899)  -> marca de la app y la serie principal de los gráficos
+ *   cian (#22d3ee)  -> todo lo que es "dato" o "sistema" (etiquetas, consola, estado de la API)
+ *   violeta         -> IA y segunda serie
+ * Las fuentes se definen aquí: `font-sans` (Space Grotesk) y `font-mono` (JetBrains Mono).
+ */
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Superficies del tema oscuro */
+  --color-fondo: #05070f;
+  --color-superficie: #0b1222;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-fondo font-sans text-slate-300 antialiased;
+    /* Dos halos de color y una cuadrícula de 32 px, fijos detrás de todo el contenido. */
+    background-image:
+      radial-gradient(60rem 30rem at 10% -10%, rgb(236 72 153 / 0.12), transparent 60%),
+      radial-gradient(50rem 30rem at 110% 10%, rgb(34 211 238 / 0.1), transparent 60%),
+      linear-gradient(rgb(148 163 184 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(148 163 184 / 0.05) 1px, transparent 1px);
+    background-size: auto, auto, 32px 32px, 32px 32px;
+    background-attachment: fixed;
+  }
+  ::selection {
+    @apply bg-pink-500/40 text-white;
+  }
+}
+
+/*
+ * Utilidades propias (Tailwind 4: @utility crea una clase que acepta variantes como sm: o hover:).
+ * Así cada componente escribe `panel` en vez de repetir 6 clases.
+ */
+
+/* Tarjeta de vidrio oscuro: la base de todas las secciones. */
+@utility panel {
+  @apply rounded-2xl border border-white/10 bg-superficie/70 shadow-lg shadow-black/30 backdrop-blur-md;
+}
+
+/* Esquinas tipo visor (HUD) en cian. Se combina con `panel`: <section class="panel esquinas">. */
+@utility esquinas {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    --c: rgb(34 211 238 / 0.7);
+    background:
+      linear-gradient(var(--c), var(--c)) top left / 14px 1.5px,
+      linear-gradient(var(--c), var(--c)) top left / 1.5px 14px,
+      linear-gradient(var(--c), var(--c)) bottom right / 14px 1.5px,
+      linear-gradient(var(--c), var(--c)) bottom right / 1.5px 14px;
+    background-repeat: no-repeat;
+  }
+}
+
+/* Etiqueta pequeña de consola: "// PERFIL", "ESTADO", etc. */
+@utility etiqueta-hud {
+  @apply font-mono text-[10px] font-medium tracking-[0.2em] text-cyan-300/80 uppercase;
+}
+
+/* Botón principal con degradado y brillo de neón. */
+@utility boton-neon {
+  @apply rounded-xl bg-gradient-to-r from-pink-600 to-violet-600 px-5 py-3 font-semibold text-white shadow-lg shadow-pink-600/25 transition hover:shadow-pink-500/40 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-400 disabled:shadow-none;
+}
+
+/* Botón secundario con borde. */
+@utility boton-borde {
+  @apply rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:text-white;
+}
+
+/* Campo de texto oscuro. */
+@utility campo {
+  @apply w-full rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-base text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-400/20 disabled:opacity-50;
+}
+
+/*
+ * Animaciones propias de las pantallas de carga (Cargando.jsx y analisis/CargandoIA.jsx).
+ * En Tailwind 4 cada variable --animate-X crea la clase `animate-X`. Los componentes las usan
+ * con `motion-safe:` para que no se muevan si el sistema pide "reducir movimiento".
+ */
+@theme {
+  --animate-escanear: escanear 2.6s ease-in-out infinite;
+  --animate-lupa: lupa 4s ease-in-out infinite;
+  --animate-subir-dato: subir-dato 2.4s ease-out infinite;
+  --animate-barrido: barrido 1.6s ease-in-out infinite;
+  --animate-flujo: flujo 1.2s linear infinite;
+  --animate-aparecer: aparecer 0.4s ease-out both;
+  --animate-texto-brillo: texto-brillo 3s linear infinite;
+  --animate-flotar: flotar 3s ease-in-out infinite;
+  --animate-parpadeo: parpadeo 1s steps(1) infinite;
+  --animate-paquete: paquete 1.8s linear infinite;
+  --animate-paquete-y: paquete-y 1.8s linear infinite;
+  --animate-crecer: crecer 1s ease-out both;
+
+  /* Línea láser que recorre la "página" de TikTok de arriba abajo. */
+  @keyframes escanear {
+    0%, 100% { top: 0%; }
+    50% { top: calc(100% - 2px); }
+  }
+  /* Lupa que pasa por encima de los videos de la cuadrícula. */
+  @keyframes lupa {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(110%, 20%) rotate(8deg); }
+    50% { transform: translate(200%, 110%) rotate(0deg); }
+    75% { transform: translate(60%, 130%) rotate(-8deg); }
+  }
+  /* Iconos de datos (likes, vistas, comentarios) que "salen" de la página. */
+  @keyframes subir-dato {
+    0% { transform: translateY(10px) scale(0.6); opacity: 0; }
+    25% { opacity: 1; }
+    100% { transform: translateY(-34px) scale(1); opacity: 0; }
+  }
+  /* Brillo que recorre la barra de progreso indeterminada. */
+  @keyframes barrido {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
+  }
+  /* Señal que viaja por las conexiones de la red neuronal (stroke-dasharray en el SVG). */
+  @keyframes flujo {
+    to { stroke-dashoffset: -16; }
+  }
+  /* Entrada suave de cada frase nueva del texto rotativo. */
+  @keyframes aparecer {
+    from { transform: translateY(6px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  /* Degradado que se desplaza dentro del texto "La IA está pensando". */
+  @keyframes texto-brillo {
+    to { background-position: 200% center; }
+  }
+  /* Vaivén suave del cerebro de la IA. */
+  @keyframes flotar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  /* Barra que se llena desde 0 hasta el ancho que tenga en su style. */
+  @keyframes crecer {
+    from { width: 0; }
+  }
+  /* Cursor de consola que parpadea. */
+  @keyframes parpadeo {
+    50% { opacity: 0; }
+  }
+  /* Paquete de datos que viaja por una conexión del pipeline (horizontal y vertical). */
+  @keyframes paquete {
+    from { left: 0%; opacity: 0; }
+    15%, 85% { opacity: 1; }
+    to { left: 100%; opacity: 0; }
+  }
+  @keyframes paquete-y {
+    from { top: 0%; opacity: 0; }
+    15%, 85% { opacity: 1; }
+    to { top: 100%; opacity: 0; }
+  }
+}

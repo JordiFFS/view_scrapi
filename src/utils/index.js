@@ -2,3 +2,4 @@
 export * from "./estadisticas";
 export * from "./exportar";
 export * from "./formato";
+export * from "./inspeccion";

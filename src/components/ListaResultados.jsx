@@ -10,7 +10,7 @@ import { TarjetaVideo } from "./TarjetaVideo";
  */
 export function ListaResultados({ resultados }) {
   if (!resultados?.length) {
-    return <p className="py-6 text-center text-slate-500">No se encontraron videos sobre este tema.</p>;
+    return <p className="panel py-6 text-center text-slate-400">No se encontraron videos sobre este tema.</p>;
   }
 
   return (

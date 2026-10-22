@@ -34,13 +34,14 @@ export function TablaVideos({ filas }) {
   }
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <h4 className="font-semibold text-slate-900">Detalle por video</h4>
-      <p className="mb-3 text-xs text-slate-500">Toca un encabezado para ordenar.</p>
+    <section className="panel p-4">
+      <p className="etiqueta-hud">// tabla de datos</p>
+      <h4 className="mt-1 font-semibold text-white">Detalle por video</h4>
+      <p className="mb-3 text-xs text-slate-400">Toca un encabezado para ordenar.</p>
       <div className="-mx-4 overflow-x-auto px-4">
         <table className="w-full min-w-[640px] text-left text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-slate-500">
+            <tr className="border-b border-white/10 font-mono text-[11px] text-slate-500 uppercase">
               <th className="py-2 pr-3 font-medium">Video</th>
               {COLUMNAS.map(({ clave, etiqueta }) => (
                 <th key={clave} className="py-2 pl-2 text-right font-medium" aria-sort={
@@ -49,8 +50,8 @@ export function TablaVideos({ filas }) {
                   <button
                     type="button"
                     onClick={() => ordenarPor(clave)}
-                    className={`whitespace-nowrap hover:text-slate-900 ${
-                      orden.clave === clave ? "font-semibold text-pink-700" : ""
+                    className={`whitespace-nowrap hover:text-white ${
+                      orden.clave === clave ? "font-semibold text-pink-300" : ""
                     }`}
                   >
                     {etiqueta}
@@ -62,13 +63,13 @@ export function TablaVideos({ filas }) {
           </thead>
           <tbody>
             {ordenadas.map((fila) => (
-              <tr key={fila.id} className="border-b border-slate-100 last:border-0">
+              <tr key={fila.id} className="border-b border-white/5 transition last:border-0 hover:bg-white/[0.03]">
                 <td className="max-w-56 py-2 pr-3">
                   <a
                     href={fila.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="block truncate text-slate-800 hover:underline"
+                    className="block truncate text-slate-200 hover:text-cyan-300 hover:underline"
                   >
                     {fila.descripcion || "Sin descripción"}
                   </a>
@@ -78,7 +79,7 @@ export function TablaVideos({ filas }) {
                   </span>
                 </td>
                 {COLUMNAS.map(({ clave, formato }) => (
-                  <td key={clave} className="py-2 pl-2 text-right tabular-nums text-slate-900">
+                  <td key={clave} className="py-2 pl-2 text-right font-mono text-slate-100 tabular-nums">
                     {fila[clave] === "" ? "—" : formato(fila[clave])}
                   </td>
                 ))}

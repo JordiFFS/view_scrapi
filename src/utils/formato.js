@@ -27,15 +27,27 @@ export function formatearNumero(numero) {
 }
 
 /**
- * Formatea una proporción como porcentaje: 0.0523 -> "5,2 %".
+ * Formatea una proporción como porcentaje: 0.0523 -> "5,2%".
  * Devuelve "—" si el valor no existe o no es un número.
  *
- * @param {number | null | undefined} proporcion
+ * Con `separado: true` deja un espacio antes del signo, como recomienda la RAE: 0.62 -> "62 %".
+ * El espacio es de no separación (\u00a0) para que el "%" nunca quede solo en otra línea.
+ *
+ * @param {number | null | undefined} proporcion Valor entre 0 y 1 (puede pasarse de 1).
+ * @param {object} [opciones]
+ * @param {number} [opciones.decimales] Máximo de decimales (por defecto 1).
+ * @param {boolean} [opciones.separado] Espacio entre el número y el "%" (por defecto false).
  * @returns {string}
  */
-export function formatearPorcentaje(proporcion) {
+export function formatearPorcentaje(proporcion, { decimales = 1, separado = false } = {}) {
   if (proporcion === null || proporcion === undefined || Number.isNaN(Number(proporcion))) return "—";
-  return Number(proporcion).toLocaleString(LOCALE, { style: "percent", maximumFractionDigits: 1 });
+  const n = Number(proporcion);
+  if (separado) {
+    // Se multiplica por 100 a mano porque el estilo "percent" de es-EC no deja espacio.
+    const numero = (n * 100).toLocaleString(LOCALE, { maximumFractionDigits: decimales });
+    return `${numero}\u00a0%`;
+  }
+  return n.toLocaleString(LOCALE, { style: "percent", maximumFractionDigits: decimales });
 }
 
 /**

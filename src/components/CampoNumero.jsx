@@ -27,9 +27,9 @@ export function limitar(texto, { minimo, maximo, porDefecto }) {
 export function CampoNumero({ id, etiqueta, valor, onCambiar, limites, disabled }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-xs font-medium text-slate-600">
+      <label htmlFor={id} className="mb-1 block font-mono text-[11px] text-slate-400">
         {etiqueta}{" "}
-        <span className="font-normal text-slate-400">
+        <span className="text-slate-600">
           ({limites.minimo}–{limites.maximo})
         </span>
       </label>
@@ -43,7 +43,7 @@ export function CampoNumero({ id, etiqueta, valor, onCambiar, limites, disabled 
         value={valor}
         onChange={(e) => onCambiar(e.target.value)}
         disabled={disabled}
-        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 disabled:bg-slate-100 disabled:text-slate-400"
+        className="campo !py-2 font-mono"
       />
     </div>
   );
